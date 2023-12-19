@@ -7,8 +7,8 @@ If you want to use the doubly linked list, you will need one more attribute prev
 
 class DoubleLinkedNode {
     val:number;
-    next:DoubleLinkedNode;
     prev:DoubleLinkedNode;
+    next:DoubleLinkedNode;
     
     constructor(_val:number|undefined, _prev:DoubleLinkedNode|undefined, _next:DoubleLinkedNode|undefined) {
         this.val  = _val  ? _val  : null;
@@ -31,7 +31,9 @@ class MyLinkedList {
 
 
     get(index: number): number|null {
-        if (this.head == null) return null; //guard clause: empty list
+        if (this.head == null) return -1; //guard clause: empty list
+        if (index < 0 || index >= this.size) return -1; //guard clause: empty list
+
 
         let result:DoubleLinkedNode;
 
@@ -47,7 +49,7 @@ class MyLinkedList {
                 result = result.prev;
             }
         }
-
+        
         return result.val;
     }
 
@@ -68,27 +70,32 @@ class MyLinkedList {
 
 
     addAtTail(val: number): void {
-        this.size++;
-
         if (this.head == null) { //guard clause: empty list
-            this.head = new DoubleLinkedNode(val, undefined, undefined);
-            this.tail = this.head;
+            this.addAtHead(val);
             return;
         }
 
+        this.size++;
         this.tail.next = new DoubleLinkedNode(val, this.tail, undefined);
-        this.tail = this.tail.next
+        this.tail = this.tail.next;
         return;
     }
 
 
     addAtIndex(index: number, val: number): void {
         if (index > this.size || index < 0) return; //guard clause: out of bounds
+        if (index === 0) {
+            this.addAtHead(val);
+            return;
+        }
+        if (index === this.size) {
+            this.addAtTail(val);
+            return;
+        }
         
-        let target:DoubleLinkedNode;
+        let target:DoubleLinkedNode = this.head;
         // Start at either head||tail, depending on how close index is the the start||end.
         if (index <= this.size/2) { //head, #0
-            target = this.head;
             for (let count:number = 0; count < index; count++) {
                 target = target.next;
             }
@@ -98,8 +105,12 @@ class MyLinkedList {
                 target = target.prev;
             }
         }
-        target.prev = new DoubleLinkedNode(val, target.prev, target.next )
+
         this.size++;
+        const newNode = new DoubleLinkedNode(val, target.prev, target);
+        target.prev.next = newNode;
+        target.prev = newNode;
+
         return;
     }
 
@@ -111,9 +122,11 @@ class MyLinkedList {
         // Start at either head||tail, depending on how close index is the the start||end.
         if (index <= this.size/2) { //head, #0
             target = this.head;
+
             for (let count:number = 0; count < index; count++) {
                 target = target.next;
             }
+
         } else {                    //tail, #this.size
             target = this.tail;
             for (let count:number = (this.size - 1); count > index; count--) {
@@ -121,20 +134,21 @@ class MyLinkedList {
             }
         }
 
+        this.size--;
+
         if (target.prev == null)  { //guard clause: deleting head node.
             this.head = target.next
-            delete target.val;
-            delete target.prev;
-            delete target.next;
+            return;
         } else if (target.next == null)  {//guard clause: deleting tail node.
             this.tail = target.prev;
-            delete target.val;
-            delete target.prev;
-            delete target.next;
+            return;
         }
-        // TODO: deleting inner node.
-        this.size--;
+        // deleting inner node.
+        target.prev.next = target.next;
+
+        return;
     }
+
 }
 
 /**
